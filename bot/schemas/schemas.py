@@ -136,6 +136,10 @@ class Config(BaseModel):
     proxy: Optional[Proxy] = Proxy()
     # kk指令中赠送资格的天数
     kk_gift_days: int = 30
+    moviepilot_username: str = ""
+    moviepilot_password: str = ""
+    moviepilot_url: str = ""
+    moviepilot_access_token: str = ""
 
     def __init__(self, **data):
         super().__init__(**data)

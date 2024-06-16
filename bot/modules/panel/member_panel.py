@@ -28,6 +28,7 @@ from bot.modules.commands.exchange import rgs_code
 from bot.sql_helper.sql_code import sql_count_c_code
 from bot.sql_helper.sql_emby import sql_get_emby, sql_update_emby, Emby, sql_delete_emby
 from bot.sql_helper.sql_emby2 import sql_get_emby2, sql_delete_emby2
+from bot.func_helper.moviepilot import search, subscribe
 
 
 # 创号函数
@@ -675,3 +676,60 @@ async def do_store_query(_, call):
         number = 1
     await callAnswer(call, '📜 正在翻页')
     await editMessage(call, text=a[number - 1], buttons=await user_query_page(b, number))
+@bot.on_callback_query(filters.regex('download_media') & user_in_group_on_filter)
+async def download_media(_, call):
+    await asyncio.gather(callAnswer(call, '🔍 请输入你想求的资源'))
+    msg = await ask_return(call, text='请在120s内对我发送你想求的资源，形如\n`钢铁侠`\n退出点 /cancel')
+    if msg is False:
+        return
+    elif msg.text == '/cancel':
+        await asyncio.gather(msg.delete(), p_start(_, msg))
+    else:
+        await sendMessage(call, '🔍 正在搜索，请稍后...')
+        result = search(msg.text)
+        if result and len(result) > 0:
+            for item in result:
+                year = item["year"]
+                if year == None:
+                    year = ""
+                else:
+                    year = f"\n年份：{year}"
+                type = item["type"]
+                if type == "未知":
+                    type = "\n类型：电影"
+                else:
+                    type = f"\n类型：{type}"
+                size = item["size"]
+                if size == None:
+                    size = ""
+                else:
+                    size = f"{size}"
+                    size_in_bytes = int(size)
+                    size_in_mb = size_in_bytes / (1024 * 1024)
+                    size_in_gb = size_in_mb / 1024
+                    if size_in_gb >= 1:
+                        size = f"\n大小：{size_in_gb:.2f} GB"
+                    else:
+                        size = f"\n大小：{size_in_mb:.2f} MB"
+                labels = item["labels"]
+                if labels != "":
+                    labels = f"\n标签：{labels}"
+                resource_team = item["resource_team"]
+                if resource_team != "":
+                    resource_team = f"\n资源组：{resource_team}"
+                pix = item["resource_pix"]
+                video_encode = item["video_encode"]
+                audio_encode = item["audio_encode"]
+                resource_info = [pix, video_encode, audio_encode]
+                resource_info = [i for i in resource_info if i != ""]
+                if resource_info:
+                    resource_info = f"\n媒体信息：{' | '.join(resource_info)}"
+                print(resource_info)
+                description = item["description"]
+                if description != "":
+                    description = f"\n描述：{description}"
+                text = f"标题：{item['title']}{type}{year}{size}{labels}{resource_team}{resource_info}{description}"
+                print(text)
+                await sendMessage(call, text)
+        else:
+            await sendMessage(call, '🤷‍♂️ 没有找到相关信息')

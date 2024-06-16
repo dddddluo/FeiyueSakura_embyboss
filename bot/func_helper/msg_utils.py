@@ -14,7 +14,7 @@ from bot import LOGGER, group, bot
 
 # 将来自己要是重写，希望不要把/cancel当关键词，用call.data，省代码还好看，切记。
 
-async def sendMessage(message, text: str, buttons=None, timer=None, send=False):
+async def sendMessage(message, text: str, buttons=None, timer=None, send=False, chat_id=None):
     """
     发送消息
     :param message: 消息
@@ -28,7 +28,10 @@ async def sendMessage(message, text: str, buttons=None, timer=None, send=False):
         message = message.message
     try:
         if send is True:
-            return await bot.send_message(chat_id=group[0], text=text, reply_markup=buttons)
+            if chat_id is None:
+                return await bot.send_message(chat_id=group[0], text=text, reply_markup=buttons)
+            else:
+                return await bot.send_message(chat_id=chat_id, text=text, reply_markup=buttons)
         # 禁用通知 disable_notification=True,
         send = await message.reply(text=text, quote=True, disable_web_page_preview=True, reply_markup=buttons)
         if timer is not None:

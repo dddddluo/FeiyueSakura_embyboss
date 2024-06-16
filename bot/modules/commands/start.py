@@ -14,6 +14,7 @@ from bot.func_helper.filters import user_in_group_filter, user_in_group_on_filte
 from bot.func_helper.msg_utils import deleteMessage, sendMessage, sendPhoto, callAnswer, editMessage
 from bot.func_helper.fix_bottons import group_f, judge_start_ikb, judge_group_ikb, cr_kk_ikb
 from bot import bot, prefixes, group, bot_photo, ranks
+from bot.func_helper import moviepilot
 
 
 # 反命令提示

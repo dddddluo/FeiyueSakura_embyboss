@@ -51,7 +51,7 @@ def members_ikb(emby=False) -> InlineKeyboardMarkup:
         method = 'storeall' if not user_buy.stat else 'exchange'
         return ikb([[('🏪 兑换商店', method), ('🗑️ 删除账号', 'delme')],
                     [('🎬 显示/隐藏', 'embyblock'), ('⭕ 重置密码', 'reset')],
-                    [('♻️ 主界面', 'back_start')]])
+                    [('🔍 求片', 'download_media'), ('♻️ 主界面', 'back_start')]])
     else:
         return ikb(
             [[('👑 创建账户', 'create')], [('⭕ 换绑TG', 'changetg'), ('🔍 绑定TG', 'bindtg')],

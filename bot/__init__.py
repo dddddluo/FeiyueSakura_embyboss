@@ -56,6 +56,10 @@ tz_id = config.tz_id
 
 w_anti_channel_ids = config.w_anti_channel_ids
 kk_gift_days = config.kk_gift_days
+moviepilot_username = config.moviepilot_username
+moviepilot_password = config.moviepilot_password
+moviepilot_url = config.moviepilot_url
+moviepilot_access_token = config.moviepilot_access_token
 save_config()
 
 LOGGER.info("配置文件加载完毕")
@@ -124,3 +128,6 @@ bot = Client(bot_name, api_id=owner_api, api_hash=owner_hash, bot_token=bot_toke
              max_concurrent_transmissions=1000, parse_mode=enums.ParseMode.MARKDOWN)
 
 LOGGER.info("Clinet 客户端准备")
+from .func_helper.moviepilot import login as moviepilot_login
+if moviepilot_access_token == "":
+    moviepilot_login()
