@@ -734,7 +734,7 @@ async def download_media(_, call):
                 text = f"资源编号: `{index}`\n标题：{item['title']}{type}{year}{size}{labels}{resource_team}{resource_info}{description}"
                 await sendMessage(call, text, send= True, chat_id=call.from_user.id)
             await sendMessage(call, f"共推送{len(result)}个结果！", send= True, chat_id=call.from_user.id)
-            msg = await ask_return(call, text='【选择资源ID】：\n\n'
+            msg = await ask_return(call, text='【选择资源ID】：\n'
                                       f'- 请在120s内对我发送你的资源编号，\n退出点 /cancel')
             if msg is False:
                 await sendMessage(call, "🔍 已取消操作", send= True, chat_id=call.from_user.id, buttons=re_download_media)
@@ -748,11 +748,11 @@ async def download_media(_, call):
                     success, result = add_download_task(result[index-1]['torrent_info'])
                     print(result)
                     if success:
-                        await sendMessage(call, f"🔗 已成功订阅，订阅ID：{result}", send= True, chat_id=call.from_user.id, buttons=re_download_media)
+                        await sendMessage(call, f"🎉 已成功添加到下载队列，下载ID：{result}", send= True, chat_id=call.from_user.id, buttons=re_download_media)
                     else:
-                        await sendMessage(call, f"🔗 订阅失败!", send= True, chat_id=call.from_user.id, buttons=re_download_media)
+                        await sendMessage(call, f"❌ 添加下载任务失败!", send= True, chat_id=call.from_user.id, buttons=re_download_media)
                 except:
-                    await ask_return(call, text='🤷‍♂️ 输入错误，已结束操作', buttons=re_download_media)
+                    await ask_return(call, text='❌ 输入错误，已结束操作', buttons=re_download_media)
                     return
         else:
             await sendMessage(call, '🤷‍♂️ 搜索失败，请稍后再试', send= True, chat_id=call.from_user.id, buttons=re_download_media)
