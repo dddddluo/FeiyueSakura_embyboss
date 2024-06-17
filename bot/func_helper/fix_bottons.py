@@ -66,7 +66,7 @@ re_bindtg_ikb = ikb([[('✨ 绑定TG', 'bindtg'), ('💫 用户主页', 'members
 re_delme_ikb = ikb([[('♻️ 重试', 'delme')], [('🔙 返回', 'members')]])
 re_reset_ikb = ikb([[('♻️ 重试', 'reset')], [('🔙 返回', 'members')]])
 re_exchange_b_ikb = ikb([[('♻️ 重试', 'exchange'), ('❌ 关闭', 'closeit')]])
-
+re_download_media = ikb([[('🔍 求片', 'download_media'), ('💫 用户主页', 'members')]])
 
 def store_ikb():
     return ikb([[(f'♾️ 兑换白名单', 'store-whitelist')],

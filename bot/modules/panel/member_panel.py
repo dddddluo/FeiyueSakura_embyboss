@@ -21,14 +21,14 @@ from bot.func_helper.filters import user_in_group_on_filter
 from bot.func_helper.utils import members_info, tem_alluser, cr_link_one
 from bot.func_helper.fix_bottons import members_ikb, back_members_ikb, re_create_ikb, del_me_ikb, re_delme_ikb, \
     re_reset_ikb, re_changetg_ikb, emby_block_ikb, user_emby_block_ikb, user_emby_unblock_ikb, re_exchange_b_ikb, \
-    store_ikb, re_store_renew, re_bindtg_ikb, close_it_ikb, user_query_page
+    store_ikb, re_store_renew, re_bindtg_ikb, close_it_ikb, user_query_page, re_download_media
 from bot.func_helper.msg_utils import callAnswer, editMessage, callListen, sendMessage, ask_return, deleteMessage
 from bot.modules.commands import p_start
 from bot.modules.commands.exchange import rgs_code
 from bot.sql_helper.sql_code import sql_count_c_code
 from bot.sql_helper.sql_emby import sql_get_emby, sql_update_emby, Emby, sql_delete_emby
 from bot.sql_helper.sql_emby2 import sql_get_emby2, sql_delete_emby2
-from bot.func_helper.moviepilot import search, subscribe
+from bot.func_helper.moviepilot import search, add_download_task
 
 
 # 创号函数
@@ -686,21 +686,24 @@ async def download_media(_, call):
         await asyncio.gather(msg.delete(), p_start(_, msg))
     else:
         await sendMessage(call, '🔍 正在搜索，请稍后...', send= True, chat_id=call.from_user.id)
-        result = search(msg.text)
-        if result and len(result) > 0:
-            for item in result:
+        success, result = search(msg.text)
+        if success:
+            if len(result) <= 0:
+                await sendMessage(call, '🤷‍♂️ 没有找到相关信息', send= True, chat_id=call.from_user.id, buttons=re_download_media)
+                return
+            for index, item in enumerate(result, start=1):
                 year = item["year"]
-                if year == None:
+                if year is None:
                     year = ""
                 else:
                     year = f"\n年份：{year}"
                 type = item["type"]
-                if type == "未知":
+                if type is None or type == "未知":
                     type = "\n类型：电影"
                 else:
                     type = f"\n类型：{type}"
                 size = item["size"]
-                if size == None:
+                if size is None:
                     size = ""
                 else:
                     size = f"{size}"
@@ -712,35 +715,45 @@ async def download_media(_, call):
                     else:
                         size = f"\n大小：{size_in_mb:.2f} MB"
                 labels = item["labels"]
-                if labels != "":
+                if labels is not None and labels != "":
                     labels = f"\n标签：{labels}"
                 resource_team = item["resource_team"]
-                if resource_team != "":
+                if resource_team is not None and resource_team != "":
                     resource_team = f"\n资源组：{resource_team}"
                 pix = item["resource_pix"]
                 video_encode = item["video_encode"]
                 audio_encode = item["audio_encode"]
                 resource_info = [pix, video_encode, audio_encode]
-                resource_info = [i for i in resource_info if i != ""]
+                resource_info = [str(info) for info in resource_info if info is not None]
+                resource_info = ' | '.join(resource_info)
                 if resource_info:
-                    resource_info = f"\n媒体信息：{' | '.join(resource_info)}"
-                print(resource_info)
+                    resource_info = f"\n媒体信息：{resource_info}"
                 description = item["description"]
                 if description != "":
                     description = f"\n描述：{description}"
-                text = f"资源ID: {item['id']}\n标题：{item['title']}{type}{year}{size}{labels}{resource_team}{resource_info}{description}"
+                text = f"资源编号: `{index}`\n标题：{item['title']}{type}{year}{size}{labels}{resource_team}{resource_info}{description}"
                 await sendMessage(call, text, send= True, chat_id=call.from_user.id)
             await sendMessage(call, f"共推送{len(result)}个结果！", send= True, chat_id=call.from_user.id)
             msg = await ask_return(call, text='【选择资源ID】：\n\n'
-                                      f'- 请在120s内对我发送你的资源ID，\n退出点 /cancel',
-                           button=re_exchange_b_ikb)
+                                      f'- 请在120s内对我发送你的资源编号，\n退出点 /cancel')
             if msg is False:
-                await sendMessage(call, "🔍 已取消操作", send= True, chat_id=call.from_user.id)
+                await sendMessage(call, "🔍 已取消操作", send= True, chat_id=call.from_user.id, buttons=re_download_media)
                 return
             elif msg.text == '/cancel':
-                await asyncio.gather(msg.delete(), sendMessage(call, "🔍 已取消操作", send= True, chat_id=call.from_user.id))
+                await asyncio.gather(msg.delete(), sendMessage(call, "🔍 已取消操作", send= True, chat_id=call.from_user.id, buttons=re_download_media))
                 return
             else:
-                print(msg.text, result[msg.text])
+                try:
+                    index = int(msg.text)
+                    success, result = add_download_task(result[index-1]['torrent_info'])
+                    print(result)
+                    if success:
+                        await sendMessage(call, f"🔗 已成功订阅，订阅ID：{result}", send= True, chat_id=call.from_user.id, buttons=re_download_media)
+                    else:
+                        await sendMessage(call, f"🔗 订阅失败!", send= True, chat_id=call.from_user.id, buttons=re_download_media)
+                except:
+                    await ask_return(call, text='🤷‍♂️ 输入错误，已结束操作', buttons=re_download_media)
+                    return
         else:
-            await sendMessage(call, '🤷‍♂️ 没有找到相关信息', send= True, chat_id=call.from_user.id)
+            await sendMessage(call, '🤷‍♂️ 搜索失败，请稍后再试', send= True, chat_id=call.from_user.id, buttons=re_download_media)
+            return
