@@ -60,6 +60,7 @@ moviepilot_username = config.moviepilot_username
 moviepilot_password = config.moviepilot_password
 moviepilot_url = config.moviepilot_url
 moviepilot_access_token = config.moviepilot_access_token
+download_cost = config.download_cost
 save_config()
 
 LOGGER.info("配置文件加载完毕")

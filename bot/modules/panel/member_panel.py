@@ -88,9 +88,11 @@ async def create_user(_, call, us, stats):
                                   f'{emby_line}\n\n'
                                   f'**·【服务器】 - 查看线路和密码**')
                 if stats == 'y':
-                    LOGGER.info(f"【创建账户】[开注状态]：{call.from_user.id} - 建立了 {emby_name} ")
+                    LOGGER.info(
+                        f"【创建账户】[开注状态]：{call.from_user.id} - 建立了 {emby_name} ")
                 elif stats == 'n':
-                    LOGGER.info(f"【创建账户】：{call.from_user.id} - 建立了 {emby_name} ")
+                    LOGGER.info(
+                        f"【创建账户】：{call.from_user.id} - 建立了 {emby_name} ")
                 await tem_alluser()
 
 
@@ -205,7 +207,8 @@ async def change_tg(_, call):
                                   f'⭕#TG改绑 原emby账户 #{emby_name}\n\n'
                                   f'从emby2表绑定至 [{call.from_user.first_name}](tg://user?id={call.from_user.id}) - {call.from_user.id}',
                                   send=True)
-                LOGGER.info(f'【TG改绑】 emby账户 {emby_name} 绑定至 {call.from_user.first_name}-{call.from_user.id}')
+                LOGGER.info(
+                    f'【TG改绑】 emby账户 {emby_name} 绑定至 {call.from_user.first_name}-{call.from_user.id}')
                 await editMessage(call, text)
 
             elif emby_pwd == e2.pwd2:
@@ -223,7 +226,8 @@ async def change_tg(_, call):
                                   f'⭕#TG改绑 原emby账户 #{emby_name}\n\n'
                                   f'从emby2表绑定至 [{call.from_user.first_name}](tg://user?id={call.from_user.id}) - {call.from_user.id}',
                                   send=True)
-                LOGGER.info(f'【TG改绑】 emby账户 {emby_name} 绑定至 {call.from_user.first_name}-{call.from_user.id}')
+                LOGGER.info(
+                    f'【TG改绑】 emby账户 {emby_name} 绑定至 {call.from_user.first_name}-{call.from_user.id}')
                 await editMessage(call, text)
 
         else:
@@ -312,7 +316,8 @@ async def bind_tg(_, call):
                                              f'🍥 很遗憾绑定失败，您输入的账户密码不符（{emby_name} - {emby_pwd}），请仔细确认后再次尝试',
                                              buttons=re_bindtg_ikb)
                 else:
-                    pwd = ['空（直接回车）', 5210] if emby_pwd == 'None' else [emby_pwd, emby_pwd]
+                    pwd = ['空（直接回车）', 5210] if emby_pwd == 'None' else [
+                        emby_pwd, emby_pwd]
                     ex = (datetime.now() + timedelta(days=30))
                     text = f'✅ 账户 {emby_name} 成功绑定\n\n' \
                            f'· 用户名称 | `{emby_name}`\n' \
@@ -437,7 +442,8 @@ async def reset(_, call):
                     if await emby.emby_reset(id=e.embyid, new=mima.text) is True:
                         await editMessage(call, f'🕶️ 操作完成！已为您重置密码为 `{mima.text}`。',
                                           buttons=back_members_ikb)
-                        LOGGER.info(f"【重置密码】：{call.from_user.id} 成功重置了密码为 {mima.text} ！")
+                        LOGGER.info(
+                            f"【重置密码】：{call.from_user.id} 成功重置了密码为 {mima.text} ！")
                     else:
                         await editMessage(call, '🫥 操作失败！请联系管理员。', buttons=back_members_ikb)
                         LOGGER.error(f"【重置密码】：{call.from_user.id} 重置密码失败 ！")
@@ -488,7 +494,8 @@ async def user_emby_block(_, call):
     currentblock = []
     if success:
         try:
-            currentblock = list(set(rep["Policy"]["BlockedMediaFolders"] + config.emby_block + ['播放列表']))
+            currentblock = list(
+                set(rep["Policy"]["BlockedMediaFolders"] + config.emby_block + ['播放列表']))
         except KeyError:
             currentblock = ['播放列表'] + extra_emby_libs + config.emby_block
         re = await emby.emby_block(embyid, 0, block=currentblock)
@@ -511,7 +518,8 @@ async def user_emby_unblock(_, call):
     currentblock = []
     if success:
         try:
-            currentblock = list(set(rep["Policy"]["BlockedMediaFolders"] + ['播放列表']))
+            currentblock = list(
+                set(rep["Policy"]["BlockedMediaFolders"] + ['播放列表']))
             # 保留不同的元素
             currentblock = [x for x in currentblock if x not in config.emby_block] + [x for x in config.emby_block if
                                                                                       x not in currentblock]
@@ -602,7 +610,8 @@ async def do_store_whitelist(_, call):
                                     f'🏪 兑换规则：\n当前兑换白名单需要 {_open.whitelist_cost} {sakura_b}，已有白名单无法再次消费。勉励',
                                     True)
         await callAnswer(call, f'🏪 您已满足 {_open.whitelist_cost} {sakura_b}要求', True)
-        sql_update_emby(Emby.tg == call.from_user.id, lv='a', iv=e.iv - _open.whitelist_cost)
+        sql_update_emby(Emby.tg == call.from_user.id, lv='a',
+                        iv=e.iv - _open.whitelist_cost)
         send = await call.message.edit(f'**{random.choice(Yulv.load_yulv().wh_msg)}**\n\n'
                                        f'🎉 恭喜[{call.from_user.first_name}](tg://user?id={call.from_user.id}) 今日晋升，{ranks["logo"]}白名单')
         await send.forward(group[0])
@@ -659,7 +668,8 @@ async def do_store_invite(_, call):
             chunks = [links[i:i + 4096] for i in range(0, len(links), 4096)]
             for chunk in chunks:
                 await sendMessage(content, chunk)
-            LOGGER.info(f"【注册码兑换】：{bot_name}已为 {content.from_user.id} 生成了 {count} 个 {days} 天邀请码")
+            LOGGER.info(
+                f"【注册码兑换】：{bot_name}已为 {content.from_user.id} 生成了 {count} 个 {days} 天邀请码")
 
     else:
         await callAnswer(call, '❌ 管理员未开启此兑换', True)
@@ -676,20 +686,27 @@ async def do_store_query(_, call):
         number = 1
     await callAnswer(call, '📜 正在翻页')
     await editMessage(call, text=a[number - 1], buttons=await user_query_page(b, number))
+
+
 @bot.on_callback_query(filters.regex('download_media') & user_in_group_on_filter)
 async def download_media(_, call):
-    await asyncio.gather(callAnswer(call, '🔍 请输入你想求的资源名称'))
-    msg = await ask_return(call, text='请在120s内对我发送你想求的资源名称，\n退出点 /cancel')
+    emby_user = sql_get_emby(tg=call.from_user.id)
+    if not emby_user:
+        return await editMessage(call, '⚠️ 数据库没有你，请重新 /start录入')
+    if emby_user.lv is None or emby_user.lv not in ['a', 'b']:
+        return await editMessage(call, '🫡 你没有权限使用此功能')
+    await asyncio.gather(callAnswer(call, f'🔍 请输入你想求的资源名称'))
+    msg = await ask_return(call, text=f'当前求片费用为: 1GB 消耗 {config.download_cost} {sakura_b}\n您当前拥有 {emby_user.iv} {sakura_b}\n请在120s内对我发送你想求的资源名称，\n退出点 /cancel')
     if msg is False:
         return
     elif msg.text == '/cancel':
-        await asyncio.gather(msg.delete(), p_start(_, msg))
+        await asyncio.gather(msg.delete(), sendMessage(call, '🔍 已取消操作', send=True, chat_id=call.from_user.id, buttons=re_download_media))
     else:
-        await sendMessage(call, '🔍 正在搜索，请稍后...', send= True, chat_id=call.from_user.id)
+        await sendMessage(call, '🔍 正在搜索，请稍后...', send=True, chat_id=call.from_user.id)
         success, result = search(msg.text)
         if success:
             if len(result) <= 0:
-                await sendMessage(call, '🤷‍♂️ 没有找到相关信息', send= True, chat_id=call.from_user.id, buttons=re_download_media)
+                await sendMessage(call, '🤷‍♂️ 没有找到相关信息', send=True, chat_id=call.from_user.id, buttons=re_download_media)
                 return
             for index, item in enumerate(result, start=1):
                 year = item["year"]
@@ -724,7 +741,8 @@ async def download_media(_, call):
                 video_encode = item["video_encode"]
                 audio_encode = item["audio_encode"]
                 resource_info = [pix, video_encode, audio_encode]
-                resource_info = [str(info) for info in resource_info if info is not None]
+                resource_info = [str(info)
+                                 for info in resource_info if info is not None]
                 resource_info = ' | '.join(resource_info)
                 if resource_info:
                     resource_info = f"\n媒体信息：{resource_info}"
@@ -732,28 +750,49 @@ async def download_media(_, call):
                 if description != "":
                     description = f"\n描述：{description}"
                 text = f"资源编号: `{index}`\n标题：{item['title']}{type}{year}{size}{labels}{resource_team}{resource_info}{description}"
-                await sendMessage(call, text, send= True, chat_id=call.from_user.id)
-            await sendMessage(call, f"共推送{len(result)}个结果！", send= True, chat_id=call.from_user.id)
-            msg = await ask_return(call, text='【选择资源ID】：\n'
-                                      f'- 请在120s内对我发送你的资源编号，\n退出点 /cancel')
-            if msg is False:
-                await sendMessage(call, "🔍 已取消操作", send= True, chat_id=call.from_user.id, buttons=re_download_media)
-                return
-            elif msg.text == '/cancel':
-                await asyncio.gather(msg.delete(), sendMessage(call, "🔍 已取消操作", send= True, chat_id=call.from_user.id, buttons=re_download_media))
-                return
-            else:
-                try:
-                    index = int(msg.text)
-                    success, result = add_download_task(result[index-1]['torrent_info'])
-                    print(result)
-                    if success:
-                        await sendMessage(call, f"🎉 已成功添加到下载队列，下载ID：{result}", send= True, chat_id=call.from_user.id, buttons=re_download_media)
-                    else:
-                        await sendMessage(call, f"❌ 添加下载任务失败!", send= True, chat_id=call.from_user.id, buttons=re_download_media)
-                except:
-                    await ask_return(call, text='❌ 输入错误，已结束操作', buttons=re_download_media)
-                    return
+                await sendMessage(call, text, send=True, chat_id=call.from_user.id)
+            await sendMessage(call, f"共推送{len(result)}个结果！", send=True, chat_id=call.from_user.id)
+            await handle_resource_selection(call, result)
         else:
-            await sendMessage(call, '🤷‍♂️ 搜索失败，请稍后再试', send= True, chat_id=call.from_user.id, buttons=re_download_media)
+            await sendMessage(call, '🤷‍♂️ 搜索失败，请稍后再试', send=True, chat_id=call.from_user.id, buttons=re_download_media)
             return
+
+
+async def handle_resource_selection(call, result):
+    while True:
+        emby_user = sql_get_emby(tg=call.from_user.id)
+        msg = await ask_return(call, text='【选择资源编号】：\n'
+                                          f'- 请在120s内对我发送你的资源编号，\n退出点 /cancel')
+        if msg is False:
+            await sendMessage(call, "🔍 已取消操作", send=True, chat_id=call.from_user.id, buttons=re_download_media)
+            return
+        elif msg.text == '/cancel':
+            await asyncio.gather(msg.delete(), sendMessage(call, "🔍 已取消操作", send=True, chat_id=call.from_user.id, buttons=re_download_media))
+            return
+        else:
+            try:
+                index = int(msg.text)
+                size = result[index-1]['size'] / (1024 * 1024 * 1024)
+                need_cost = math.ceil(size) * config.download_cost
+                if need_cost > emby_user.iv:
+                    await sendMessage(call, f"❌ 您的{sakura_b}不足，此资源需要 {need_cost}{sakura_b}\n请选择其他资源编号", send=True, chat_id=chat_id)
+                    continue
+                success, download_id = add_download_task(
+                    result[index-1]['torrent_info'])
+                if success:
+                    sql_update_emby(Emby.tg == call.from_user.id,
+                                    iv=emby_user.iv - need_cost)
+                    await sendMessage(call, f"🎉 已成功添加到下载队列，下载ID：{download_id}，此次消耗 {need_cost}{sakura_b}", send=True, chat_id=call.from_user.id, buttons=re_download_media)
+                    return
+                else:
+                    await sendMessage(call, f"❌ 添加下载任务失败!", send=True, chat_id=call.from_user.id, buttons=re_download_media)
+                    return
+            except IndexError:
+                await sendMessage(call, '❌ 输入错误，请重新输入，退出点 /cancel', send=True, chat_id=call.from_user.id)
+                continue
+            except ValueError:
+                await sendMessage(call, '❌ 输入错误，请重新输入，退出点 /cancel', send=True, chat_id=call.from_user.id)
+                continue
+            except:
+                await sendMessage(call, '❌ 呜呜呜，出错了', send=True, chat_id=call.from_user.id, buttons=re_download_media)
+                return
