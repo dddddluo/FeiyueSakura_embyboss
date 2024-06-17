@@ -35,4 +35,4 @@ jobs:
           platforms: linux/amd64
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/sakura_embyboss:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/feiyue_sakura_embyboss:latest
