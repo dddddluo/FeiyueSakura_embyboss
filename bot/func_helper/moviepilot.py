@@ -1,31 +1,35 @@
 import requests
 import json
 from bot import config, moviepilot_access_token, moviepilot_url, moviepilot_username, moviepilot_password,save_config
-
+TIMEOUT = 15
 
 def do_request(request):
-    response = requests.request(
-        method=request['method'], url=request['url'], headers=request['headers'], data=request.get('data', None))
-    if response.status_code == 401:  # Unauthorized
-        print("Token expired, attempting to re-login.")
-        login()
-        request['headers']['Authorization'] = f"{tokenType} {accessToken}"
-        response = requests.request(
-            method=request['method'], url=request['url'], headers=request['headers'], data=request.get('data', None))
-    return response
+    error_count = 0
+    while error_count < 3:
+        try:
+            response = requests.request(
+                method=request['method'], url=request['url'], headers=request['headers'], data=request.get('data', None), timeout=TIMEOUT)
+            if response.status_code == 401:  # Unauthorized
+                print("Token expired, attempting to re-login.")
+                login()
+                request['headers']['Authorization'] = moviepilot_access_token
+                response = requests.request(
+                    method=request['method'], url=request['url'], headers=request['headers'], data=request.get('data', None), timeout=TIMEOUT)
+            return response
+        except Exception as e:
+            error_count += 1
+            print(f"Error: {e}, Retrying...")
+    return None
 
 
 def login():
     url = f"{moviepilot_url}/api/v1/login/access-token"
     payload = f"username={moviepilot_username}&password={moviepilot_password}"
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    response = requests.post(url, data=payload, headers=headers)
+    response = requests.post(url, data=payload, headers=headers, timeout=TIMEOUT)
     result = response.json()
     if 'access_token' in result:
-        global accessToken, tokenType
-        accessToken = result['access_token']
-        tokenType = result['token_type']
-        config.moviepilot_access_token = tokenType + ' ' + result['access_token']
+        config.moviepilot_access_token = result['token_type'] + ' ' + result['access_token']
         save_config()
         print("Login MP successful, token stored")
     else:
@@ -56,6 +60,7 @@ def search(title):
     if data.get("success", False):
         data = data["data"]
         for item in data:
+            print(data)
             meta_info = item.get("meta_info", {})
             torrent_info = item.get("torrent_info", {})
             result = {

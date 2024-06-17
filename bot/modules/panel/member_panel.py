@@ -678,14 +678,14 @@ async def do_store_query(_, call):
     await editMessage(call, text=a[number - 1], buttons=await user_query_page(b, number))
 @bot.on_callback_query(filters.regex('download_media') & user_in_group_on_filter)
 async def download_media(_, call):
-    await asyncio.gather(callAnswer(call, '🔍 请输入你想求的资源'))
-    msg = await ask_return(call, text='请在120s内对我发送你想求的资源，形如\n`钢铁侠`\n退出点 /cancel')
+    await asyncio.gather(callAnswer(call, '🔍 请输入你想求的资源名称'))
+    msg = await ask_return(call, text='请在120s内对我发送你想求的资源名称，\n退出点 /cancel')
     if msg is False:
         return
     elif msg.text == '/cancel':
         await asyncio.gather(msg.delete(), p_start(_, msg))
     else:
-        await sendMessage(call, '🔍 正在搜索，请稍后...')
+        await sendMessage(call, '🔍 正在搜索，请稍后...', send= True, chat_id=call.from_user.id)
         result = search(msg.text)
         if result and len(result) > 0:
             for item in result:
@@ -728,8 +728,19 @@ async def download_media(_, call):
                 description = item["description"]
                 if description != "":
                     description = f"\n描述：{description}"
-                text = f"标题：{item['title']}{type}{year}{size}{labels}{resource_team}{resource_info}{description}"
-                print(text)
-                await sendMessage(call, text)
+                text = f"资源ID: {item['id']}\n标题：{item['title']}{type}{year}{size}{labels}{resource_team}{resource_info}{description}"
+                await sendMessage(call, text, send= True, chat_id=call.from_user.id)
+            await sendMessage(call, f"共推送{len(result)}个结果！", send= True, chat_id=call.from_user.id)
+            msg = await ask_return(call, text='【选择资源ID】：\n\n'
+                                      f'- 请在120s内对我发送你的资源ID，\n退出点 /cancel',
+                           button=re_exchange_b_ikb)
+            if msg is False:
+                await sendMessage(call, "🔍 已取消操作", send= True, chat_id=call.from_user.id)
+                return
+            elif msg.text == '/cancel':
+                await asyncio.gather(msg.delete(), sendMessage(call, "🔍 已取消操作", send= True, chat_id=call.from_user.id))
+                return
+            else:
+                print(msg.text, result[msg.text])
         else:
-            await sendMessage(call, '🤷‍♂️ 没有找到相关信息')
+            await sendMessage(call, '🤷‍♂️ 没有找到相关信息', send= True, chat_id=call.from_user.id)
