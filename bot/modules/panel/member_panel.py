@@ -14,7 +14,7 @@ from datetime import timedelta, datetime
 from pyrogram.errors import BadRequest
 from bot.schemas import ExDate, Yulv
 from bot import bot, LOGGER, _open, emby_line, sakura_b, ranks, group, extra_emby_libs, config, user_buy, \
-    bot_name
+    bot_name, bot_photo
 from pyrogram import filters
 from bot.func_helper.emby import emby
 from bot.func_helper.filters import user_in_group_on_filter
@@ -22,13 +22,14 @@ from bot.func_helper.utils import members_info, tem_alluser, cr_link_one
 from bot.func_helper.fix_bottons import members_ikb, back_members_ikb, re_create_ikb, del_me_ikb, re_delme_ikb, \
     re_reset_ikb, re_changetg_ikb, emby_block_ikb, user_emby_block_ikb, user_emby_unblock_ikb, re_exchange_b_ikb, \
     store_ikb, re_store_renew, re_bindtg_ikb, close_it_ikb, user_query_page, re_download_media
-from bot.func_helper.msg_utils import callAnswer, editMessage, callListen, sendMessage, ask_return, deleteMessage
+from bot.func_helper.msg_utils import callAnswer, editMessage, callListen, sendMessage, ask_return, deleteMessage, sendPhoto
 from bot.modules.commands import p_start
 from bot.modules.commands.exchange import rgs_code
 from bot.sql_helper.sql_code import sql_count_c_code
 from bot.sql_helper.sql_emby import sql_get_emby, sql_update_emby, Emby, sql_delete_emby
 from bot.sql_helper.sql_emby2 import sql_get_emby2, sql_delete_emby2
 from bot.func_helper.moviepilot import search, add_download_task
+
 
 
 # 创号函数
@@ -696,17 +697,19 @@ async def download_media(_, call):
     if emby_user.lv is None or emby_user.lv not in ['a', 'b']:
         return await editMessage(call, '🫡 你没有权限使用此功能')
     await asyncio.gather(callAnswer(call, f'🔍 请输入你想求的资源名称'))
-    msg = await ask_return(call, text=f'当前求片费用为: 1GB 消耗 {config.download_cost} {sakura_b}\n您当前拥有 {emby_user.iv} {sakura_b}\n请在120s内对我发送你想求的资源名称，\n退出点 /cancel')
-    if msg is False:
+    await editMessage(call,
+                      f"当前求片费用为: 1GB 消耗 {config.download_cost} {sakura_b}\n您当前拥有 {emby_user.iv} {sakura_b}\n请在120s内对我发送你想求的资源名称，\n退出点 /cancel")
+    txt = await callListen(call, 120, buttons=re_download_media)
+    if txt is False:
         return
-    elif msg.text == '/cancel':
-        await asyncio.gather(msg.delete(), sendMessage(call, '🔍 已取消操作', send=True, chat_id=call.from_user.id, buttons=re_download_media))
+    if txt.text == '/cancel':
+        await asyncio.gather(txt.delete(), editMessage(call, '🔍 已取消操作', buttons=back_members_ikb))
     else:
-        await sendMessage(call, '🔍 正在搜索，请稍后...', send=True, chat_id=call.from_user.id)
-        success, result = search(msg.text)
+        await editMessage(call, '🔍 正在搜索，请稍后...', buttons=re_download_media)
+        success, result = await search(txt.text)
         if success:
             if len(result) <= 0:
-                await sendMessage(call, '🤷‍♂️ 没有找到相关信息', send=True, chat_id=call.from_user.id, buttons=re_download_media)
+                await editMessage(call, '🤷‍♂️ 没有找到相关信息', buttons=re_download_media)
                 return
             for index, item in enumerate(result, start=1):
                 year = item["year"]
@@ -754,45 +757,44 @@ async def download_media(_, call):
             await sendMessage(call, f"共推送{len(result)}个结果！", send=True, chat_id=call.from_user.id)
             await handle_resource_selection(call, result)
         else:
-            await sendMessage(call, '🤷‍♂️ 搜索失败，请稍后再试', send=True, chat_id=call.from_user.id, buttons=re_download_media)
+            await editMessage(call, '🤷‍♂️ 搜索失败，请稍后再试', buttons=re_download_media)
             return
 
 
 async def handle_resource_selection(call, result):
     while True:
         emby_user = sql_get_emby(tg=call.from_user.id)
-        msg = await ask_return(call, text='【选择资源编号】：\n'
-                                          f'- 请在120s内对我发送你的资源编号，\n退出点 /cancel')
-        if msg is False:
-            await sendMessage(call, "🔍 已取消操作", send=True, chat_id=call.from_user.id, buttons=re_download_media)
+        msg = await sendPhoto(call, photo=bot_photo, caption = "【选择资源编号】：\n请在120s内对我发送你的资源编号，\n退出点 /cancel", send=True, chat_id=call.from_user.id)
+        txt = await callListen(call, 120, buttons=re_download_media)
+        if txt is False:
             return
-        elif msg.text == '/cancel':
-            await asyncio.gather(msg.delete(), sendMessage(call, "🔍 已取消操作", send=True, chat_id=call.from_user.id, buttons=re_download_media))
+        elif txt.text == '/cancel':
+            await asyncio.gather(txt.delete(), editMessage(msg, '🔍 已取消操作', buttons=back_members_ikb))
             return
         else:
             try:
-                index = int(msg.text)
+                index = int(txt.text)
                 size = result[index-1]['size'] / (1024 * 1024 * 1024)
                 need_cost = math.ceil(size) * config.download_cost
                 if need_cost > emby_user.iv:
-                    await sendMessage(call, f"❌ 您的{sakura_b}不足，此资源需要 {need_cost}{sakura_b}\n请选择其他资源编号", send=True, chat_id=chat_id)
+                    await editMessage(msg, f"❌ 您的{sakura_b}不足，此资源需要 {need_cost}{sakura_b}\n请选择其他资源编号", buttons=re_download_media)
                     continue
-                success, download_id = add_download_task(
+                success, download_id = await add_download_task(
                     result[index-1]['torrent_info'])
                 if success:
                     sql_update_emby(Emby.tg == call.from_user.id,
                                     iv=emby_user.iv - need_cost)
-                    await sendMessage(call, f"🎉 已成功添加到下载队列，下载ID：{download_id}，此次消耗 {need_cost}{sakura_b}", send=True, chat_id=call.from_user.id, buttons=re_download_media)
+                    await editMessage(msg, f"🎉 已成功添加到下载队列，下载ID：{download_id}，此次消耗 {need_cost}{sakura_b}", buttons=re_download_media)
                     return
                 else:
-                    await sendMessage(call, f"❌ 添加下载任务失败!", send=True, chat_id=call.from_user.id, buttons=re_download_media)
+                    await editMessage(msg, f"❌ 添加下载任务失败!", buttons=re_download_media)
                     return
             except IndexError:
-                await sendMessage(call, '❌ 输入错误，请重新输入，退出点 /cancel', send=True, chat_id=call.from_user.id)
+                await editMessage(msg, '❌ 输入错误，请重新输入，退出点 /cancel', buttons=re_download_media)
                 continue
             except ValueError:
-                await sendMessage(call, '❌ 输入错误，请重新输入，退出点 /cancel', send=True, chat_id=call.from_user.id)
+                await editMessage(msg, '❌ 输入错误，请重新输入，退出点 /cancel', buttons=re_download_media)
                 continue
             except:
-                await sendMessage(call, '❌ 呜呜呜，出错了', send=True, chat_id=call.from_user.id, buttons=re_download_media)
+                await editMessage(msg, '❌ 呜呜呜，出错了', buttons=re_download_media)
                 return

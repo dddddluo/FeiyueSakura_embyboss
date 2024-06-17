@@ -2,28 +2,35 @@ import requests
 import json
 from bot import config, moviepilot_access_token, moviepilot_url, moviepilot_username, moviepilot_password,save_config
 from bot import LOGGER
+import aiohttp
+import asyncio
+
 TIMEOUT = 30
+# aiohttp重试装饰器
+def aiohttp_retry(retry_count):
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            for i in range(retry_count):
+                try:
+                    return await func(*args, **kwargs)
+                except aiohttp.ClientError:
+                    await asyncio.sleep(3)  # 延迟 3 秒后进行重试
+            return None
 
-def do_request(request):
-    error_count = 0
-    while error_count < 3:
-        try:
-            response = requests.request(
-                method=request['method'], url=request['url'], headers=request['headers'], data=request.get('data', None), timeout=TIMEOUT)
-            if response.status_code == 401:  # Unauthorized
+        return wrapper
+
+    return decorator
+@aiohttp_retry(3)
+async def do_request(request):
+    async with aiohttp.ClientSession() as session:
+        async with session.request(method=request['method'], url=request['url'], headers=request['headers'], data=request.get('data')) as response:
+            if response.status == 401:
                 LOGGER.error("MP Token expired, attempting to re-login.")
-                login()
-                request['headers']['Authorization'] = moviepilot_access_token
-                response = requests.request(
-                    method=request['method'], url=request['url'], headers=request['headers'], data=request.get('data', None), timeout=TIMEOUT)
-            return response
-        except Exception as e:
-            error_count += 1
-            LOGGER.error(f"MP Error: {e}, Retrying...")
-    return None
-
-
-def login():
+                await login()
+                request['headers']['Authorization'] = config.moviepilot_access_token
+                return await do_request(request)
+            return await response.json()
+async def login():
     url = f"{moviepilot_url}/api/v1/login/access-token"
     payload = f"username={moviepilot_username}&password={moviepilot_password}"
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -36,30 +43,14 @@ def login():
     else:
         LOGGER.error("MP Login failed:", result)
 
-
-def site():
-    url = f"{moviepilot_url}/api/v1/site/"
-    headers = {'Authorization': moviepilot_access_token}
-    request = {'method': 'GET', 'url': url, 'headers': headers}
-    response = do_request(request)
-    if response.status_code == 200:
-        data = response.json()
-        LOGGER.info("MP Get site info successful!")
-        return data
-    else:
-        LOGGER.error("MP Get site info failed!")
-        return []
-
-
-def search(title):
+async def search(title):
     if title is None:
         return False, []
     url = f"{moviepilot_url}/api/v1/search/title?keyword={title}"
     headers = {'Authorization': moviepilot_access_token}
     request = {'method': 'GET', 'url': url, 'headers': headers}
-    response = do_request(request)
     try:
-        data = response.json()
+        data = await do_request(request)
         results = []
         if data.get("success", False):
             data = data["data"]
@@ -93,7 +84,7 @@ def search(title):
         return False, []
 
 
-def add_download_task(param):
+async def add_download_task(param):
     if param is None:
         return False, None
     url = f"{moviepilot_url}/api/v1/download/add"
@@ -102,9 +93,8 @@ def add_download_task(param):
     jsonData = json.dumps(param)
     request = {'method': 'POST', 'url': url,
                'headers': headers, 'data': jsonData}
-    response = do_request(request)
     try:
-        result = response.json()
+        result = await do_request(request)
         if result.get("success", False):
             LOGGER.info("MP add download task successful, ID:", result["data"]["download_id"])
             return True, result["data"]["download_id"]

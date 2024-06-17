@@ -29,9 +29,8 @@ async def sendMessage(message, text: str, buttons=None, timer=None, send=False, 
     try:
         if send is True:
             if chat_id is None:
-                return await bot.send_message(chat_id=group[0], text=text, reply_markup=buttons)
-            else:
-                return await bot.send_message(chat_id=chat_id, text=text, reply_markup=buttons)
+                chat_id = group[0]
+            return await bot.send_message(chat_id=chat_id, text=text, reply_markup=buttons)
         # 禁用通知 disable_notification=True,
         send = await message.reply(text=text, quote=True, disable_web_page_preview=True, reply_markup=buttons)
         if timer is not None:
@@ -106,7 +105,7 @@ async def sendFile(message, file, file_name, caption=None, buttons=None):
         return str(e)
 
 
-async def sendPhoto(message, photo, caption=None, buttons=None, timer=None, send=False):
+async def sendPhoto(message, photo, caption=None, buttons=None, timer=None, send=False, chat_id=None):
     """
     发送图片
     :param message:
@@ -121,7 +120,9 @@ async def sendPhoto(message, photo, caption=None, buttons=None, timer=None, send
         message = message.message
     try:
         if send is True:
-            return await bot.send_photo(chat_id=group[0], photo=photo, caption=caption, reply_markup=buttons)
+            if chat_id is None:
+                chat_id = group[0]
+            return await bot.send_photo(chat_id=chat_id, photo=photo, caption=caption, reply_markup=buttons)
         # quote=True 引用回复
         send = await message.reply_photo(photo=photo, caption=caption, disable_notification=True,
                                          reply_markup=buttons)
