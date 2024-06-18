@@ -26,9 +26,11 @@ async def do_request(request):
         async with session.request(method=request['method'], url=request['url'], headers=request['headers'], data=request.get('data')) as response:
             if response.status == 401:
                 LOGGER.error("MP Token expired, attempting to re-login.")
-                await login()
-                request['headers']['Authorization'] = config.moviepilot_access_token
-                return await do_request(request)
+                success = await login()
+                if success:
+                    request['headers']['Authorization'] = config.moviepilot_access_token
+                    return await do_request(request)
+                return None
             return await response.json()
 async def login():
     url = f"{moviepilot_url}/api/v1/login/access-token"
@@ -40,8 +42,10 @@ async def login():
         config.moviepilot_access_token = result['token_type'] + ' ' + result['access_token']
         save_config()
         LOGGER.info("MP Login successful, token stored")
+        return True
     else:
         LOGGER.error(f"MP Login failed: {result}")
+        return False
 
 async def search(title):
     if title is None:
