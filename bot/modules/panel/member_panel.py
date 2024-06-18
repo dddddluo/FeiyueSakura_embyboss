@@ -782,7 +782,7 @@ async def handle_resource_selection(call, result):
                 success, download_id = await add_download_task(
                     result[index-1]['torrent_info'])
                 if success:
-                    LOGGER.info(f"【下载任务】：{call.from_user.id} 已成功添加到下载队列，下载ID：{download_id}，此次消耗 {need_cost}{sakura_b}")
+                    LOGGER.info(f"【下载任务】：{call.from_user.id} 已成功添加到下载队列，下载ID：{download_id}\n此次消耗 {need_cost}{sakura_b}")
                     sql_update_emby(Emby.tg == call.from_user.id,
                                     iv=emby_user.iv - need_cost)
                     await editMessage(msg, f"🎉 已成功添加到下载队列，下载ID：{download_id}，此次消耗 {need_cost}{sakura_b}", buttons=re_download_media)
