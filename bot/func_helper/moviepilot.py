@@ -41,7 +41,7 @@ async def login():
         save_config()
         LOGGER.info("MP Login successful, token stored")
     else:
-        LOGGER.error("MP Login failed:", result)
+        LOGGER.error(f"MP Login failed: {result}")
 
 async def search(title):
     if title is None:
@@ -80,7 +80,7 @@ async def search(title):
         LOGGER.info("MP Search successful!")
         return True, results
     except Exception as e:
-        LOGGER.error('MP Search failed:', e)
+        LOGGER.error(f"MP Search failed: {e}")
         return False, []
 
 
@@ -96,11 +96,11 @@ async def add_download_task(param):
     try:
         result = await do_request(request)
         if result.get("success", False):
-            LOGGER.info("MP add download task successful, ID:", result["data"]["download_id"])
+            LOGGER.info(f"MP add download task successful, ID: {result['data']['download_id']}")
             return True, result["data"]["download_id"]
         else:
-            LOGGER.error("MP add download task failed:", result.get("message"))
+            LOGGER.error(f"MP add download task failed: {result.get('message')}")
             return False, None
     except Exception as e:
-        LOGGER.error('MP add download task failed:', e)
+        LOGGER.error(f"MP add download task failed: {e}")
         return False, None

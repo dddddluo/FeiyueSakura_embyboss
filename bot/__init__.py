@@ -129,6 +129,3 @@ bot = Client(bot_name, api_id=owner_api, api_hash=owner_hash, bot_token=bot_toke
              max_concurrent_transmissions=1000, parse_mode=enums.ParseMode.MARKDOWN)
 
 LOGGER.info("Clinet 客户端准备")
-from .func_helper.moviepilot import login as moviepilot_login
-if moviepilot_url != "" and moviepilot_access_token == "":
-    moviepilot_login()
