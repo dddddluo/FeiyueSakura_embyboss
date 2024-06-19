@@ -143,6 +143,7 @@ class Config(BaseModel):
     moviepilot_url: str = ""
     moviepilot_access_token: str = ""
     download_cost: int = 20
+    download_log_chatid: int = 0
 
     def __init__(self, **data):
         super().__init__(**data)

@@ -713,20 +713,17 @@ async def download_media(_, call):
                 return
             for index, item in enumerate(result, start=1):
                 year = item["year"]
-                if year is None:
-                    year = ""
-                else:
+                if year is not None and year != "":
                     year = f"\n年份：{year}"
+                else:
+                    year = ""
                 type = item["type"]
                 if type is None or type == "未知":
                     type = "\n类型：电影"
                 else:
                     type = f"\n类型：{type}"
                 size = item["size"]
-                if size is None:
-                    size = ""
-                else:
-                    size = f"{size}"
+                if size is not None and size != "":
                     size_in_bytes = int(size)
                     size_in_mb = size_in_bytes / (1024 * 1024)
                     size_in_gb = size_in_mb / 1024
@@ -734,25 +731,34 @@ async def download_media(_, call):
                         size = f"\n大小：{size_in_gb:.2f} GB"
                     else:
                         size = f"\n大小：{size_in_mb:.2f} MB"
+                else:
+                    size = ""
                 labels = item["labels"]
                 if labels is not None and labels != "":
                     labels = f"\n标签：{labels}"
+                else:
+                    labels = ""
                 resource_team = item["resource_team"]
                 if resource_team is not None and resource_team != "":
                     resource_team = f"\n资源组：{resource_team}"
+                else:
+                    resource_team = ""
                 pix = item["resource_pix"]
                 video_encode = item["video_encode"]
                 audio_encode = item["audio_encode"]
                 resource_info = [pix, video_encode, audio_encode]
                 resource_info = [str(info)
-                                 for info in resource_info if info is not None]
+                                 for info in resource_info if info is not None and info != ""]
                 resource_info = ' | '.join(resource_info)
                 if resource_info:
                     resource_info = f"\n媒体信息：{resource_info}"
                 description = item["description"]
-                if description != "":
+                if description is not None and description != "":
                     description = f"\n描述：{description}"
+                else:
+                    description = ""
                 text = f"资源编号: `{index}`\n标题：{item['title']}{type}{year}{size}{labels}{resource_team}{resource_info}{description}"
+                item["tg_log"] = text
                 await sendMessage(call, text, send=True, chat_id=call.from_user.id)
             await sendMessage(call, f"共推送{len(result)}个结果！", send=True, chat_id=call.from_user.id)
             await handle_resource_selection(call, result)
@@ -767,9 +773,10 @@ async def handle_resource_selection(call, result):
         msg = await sendPhoto(call, photo=bot_photo, caption = "【选择资源编号】：\n请在120s内对我发送你的资源编号，\n退出点 /cancel", send=True, chat_id=call.from_user.id)
         txt = await callListen(call, 120, buttons=re_download_media)
         if txt is False:
+            await asyncio.gather(editMessage(msg, '🔍 已取消操作', buttons=back_members_ikb))
             return
         elif txt.text == '/cancel':
-            await asyncio.gather(txt.delete(), editMessage(msg, '🔍 已取消操作', buttons=back_members_ikb))
+            await asyncio.gather(editMessage(msg, '🔍 已取消操作', buttons=back_members_ikb))
             return
         else:
             try:
@@ -782,9 +789,13 @@ async def handle_resource_selection(call, result):
                 success, download_id = await add_download_task(
                     result[index-1]['torrent_info'])
                 if success:
-                    LOGGER.info(f"【下载任务】：{call.from_user.id} 已成功添加到下载队列，下载ID：{download_id}\n此次消耗 {need_cost}{sakura_b}")
+                    log = f"【下载任务】：{call.from_user.id} 已成功添加到下载队列，下载ID：{download_id}\n此次消耗 {need_cost}{sakura_b}"
+                    LOGGER.info(log)
                     sql_update_emby(Emby.tg == call.from_user.id,
                                     iv=emby_user.iv - need_cost)
+                    if config.download_log_chatid:
+                        download_log = f"{log}\n详情：{result[index-1]['tg_log']}"
+                        await sendMessage(call, download_log, send=True, chat_id=config.download_log_chatid)
                     await editMessage(msg, f"🎉 已成功添加到下载队列，下载ID：{download_id}，此次消耗 {need_cost}{sakura_b}", buttons=re_download_media)
                     return
                 else:
