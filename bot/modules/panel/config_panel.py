@@ -245,3 +245,17 @@ async def set_kk_gift_days(_, call):
                               f"🤝 【赠送资格天数】\n\n{days}天 **Done!**",
                               buttons=back_config_p_ikb)
             LOGGER.info(f"【admin】：{call.from_user.id} - 更新赠送资格天数完成")
+@bot.on_callback_query(filters.regex('set_moviepilot') & admins_on_filter)
+async def set_moviepilot(_, call):
+    if config.moviepilot_open:
+        config.moviepilot_open = False
+        await callAnswer(call, '👮🏻‍♂️ 您已关闭 MP求片功能', True)
+        await config_p_re(_, call)
+        save_config()
+        LOGGER.info(f"【admin】：管理员 {call.from_user.first_name} 已调整 MP求片功能 False")
+    elif not config.moviepilot_open:
+        config.moviepilot_open = True
+        await callAnswer(call, '👮🏻‍♂️ 您已开启 MP求片功能', True)
+        await config_p_re(_, call)
+        save_config()
+        LOGGER.info(f"【admin】：管理员 {call.from_user.first_name} 已调整 MP求片功能 True")

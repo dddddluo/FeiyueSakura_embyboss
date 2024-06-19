@@ -691,6 +691,8 @@ async def do_store_query(_, call):
 
 @bot.on_callback_query(filters.regex('download_media') & user_in_group_on_filter)
 async def download_media(_, call):
+    if not config.moviepilot_open:
+        return await callAnswer(call, '❌ 管理员未开启求片功能', True)
     emby_user = sql_get_emby(tg=call.from_user.id)
     if not emby_user:
         return await editMessage(call, '⚠️ 数据库没有你，请重新 /start录入')
