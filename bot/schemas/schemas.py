@@ -136,6 +136,8 @@ class Config(BaseModel):
     proxy: Optional[Proxy] = Proxy()
     # kk指令中赠送资格的天数
     kk_gift_days: int = 30
+    # 是否开启求片
+    moviepilot_open: bool = False
     moviepilot_username: str = ""
     moviepilot_password: str = ""
     moviepilot_url: str = ""

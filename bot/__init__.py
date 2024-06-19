@@ -56,6 +56,7 @@ tz_id = config.tz_id
 
 w_anti_channel_ids = config.w_anti_channel_ids
 kk_gift_days = config.kk_gift_days
+moviepilot_open = config.moviepilot_open
 moviepilot_username = config.moviepilot_username
 moviepilot_password = config.moviepilot_password
 moviepilot_url = config.moviepilot_url
