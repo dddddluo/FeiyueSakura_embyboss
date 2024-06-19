@@ -238,7 +238,7 @@ def try_set_buy(ls: list) -> InlineKeyboardMarkup:
 
 """ other """
 register_code_ikb = ikb([[('🎟️ 注册', 'create'), ('⭕ 取消', 'closeit')]])
-dp_g_ikb = ikb([[("🈺 ╰(￣ω￣ｏ)", "t.me/Aaaaa_su", "url")]])
+dp_g_ikb = ikb([[("🈺 ╰(￣ω￣ｏ)", "t.me/fengzheng58", "url")]])
 
 
 async def cr_kk_ikb(uid, first):
