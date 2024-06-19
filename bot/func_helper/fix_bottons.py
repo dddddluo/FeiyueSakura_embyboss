@@ -212,12 +212,13 @@ def config_preparation() -> InlineKeyboardMarkup:
     leave_ban = '✅' if _open.leave_ban else '❎'
     uplays = '✅' if _open.uplays else '❎'
     moviepilot = '✅' if config.moviepilot_open else '❎'
+    fuxx_pitao = '✅' if config.fuxx_pitao else '❎'
     keyboard = ikb(
         [[('📄 导出日志', 'log_out'), ('📌 设置探针', 'set_tz')],
          [('💠 emby线路', 'set_line'), ('🎬 显/隐指定库', 'set_block')],
          [(f'{code} 注册码续期', 'open_allow_code'), (f'{buy_stat} 开关购买', 'set_buy')],
          [(f'{leave_ban} 退群封禁', 'leave_ban'), (f'{uplays} 自动看片结算', 'set_uplays')],
-         [(f'{moviepilot} MP求片', 'set_moviepilot')],
+         [(f'{moviepilot} MP求片', 'set_moviepilot'),(f'{fuxx_pitao} 皮套人过滤功能', 'set_fuxx_pitao')],
          [(f'设置赠送资格天数({config.kk_gift_days}天)', 'set_kk_gift_days')],
          [('🔙 返回', 'manage')]])
     return keyboard

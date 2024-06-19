@@ -63,7 +63,7 @@ moviepilot_url = config.moviepilot_url
 moviepilot_access_token = config.moviepilot_access_token
 download_cost = config.download_cost
 download_log_chatid = config.download_log_chatid
-
+fuxx_pitao = config.fuxx_pitao
 save_config()
 
 LOGGER.info("配置文件加载完毕")

@@ -5,6 +5,8 @@ from bot.sql_helper import Base, Session, engine
 from sqlalchemy import Column, BigInteger, String, DateTime, Integer, case
 from sqlalchemy import func
 from sqlalchemy import or_
+from bot import LOGGER
+
 
 
 class Emby(Base):
@@ -155,7 +157,8 @@ def sql_update_emby(condition, **kwargs):
                 setattr(emby, k, v)
             session.commit()
             return True
-        except:
+        except Exception as e:
+            LOGGER.error(e)
             return False
 
 

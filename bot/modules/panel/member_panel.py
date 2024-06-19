@@ -103,7 +103,6 @@ async def members(_, call):
     data = await members_info(tg=call.from_user.id)
     if not data:
         return await callAnswer(call, '⚠️ 数据库没有你，请重新 /start录入', True)
-
     await callAnswer(call, f"✅ 用户界面")
     name, lv, ex, us, embyid, pwd2 = data
     text = f"▎__欢迎进入用户面板！{call.from_user.first_name}__\n\n" \
@@ -233,6 +232,7 @@ async def change_tg(_, call):
 
         else:
             if emby_pwd != e.pwd2:
+                LOGGER.info(f'emby_pwd: {emby_pwd}, e.pwd2: {e.pwd2}')
                 success, embyid = await emby.authority_account(call.from_user.id, emby_name, emby_pwd)
                 if not success:
                     return await editMessage(call,
@@ -253,18 +253,20 @@ async def change_tg(_, call):
                        f'· 到期时间 | `{e.ex}`\n\n' \
                        f'· 当前线路：\n{emby_line}\n\n' \
                        f'**·在【服务器】按钮 - 查看线路和密码**'
-
-            f = await bot.get_users(user_ids=e.tg)
-            if not f.is_deleted:
+            f = None
+            try:
+                f = await bot.get_users(user_ids=e.tg)
+            except Exception as ex:
+                LOGGER.error(f'【TG改绑】 emby账户{emby_name} 通过tg api获取{e.tg}用户失败，原因：{ex}')
+            if f is not None and not f.is_deleted:
                 await sendMessage(call,
                                   f'⭕#TG改绑 **用户 [{call.from_user.id}](tg://user?id={call.from_user.id}) 正在试图改绑一个状态正常的[tg用户](tg://user?id={e.tg}) - {e.name}\n\n请管理员检查。**',
                                   send=True)
                 return await editMessage(call,
                                          f'⚠️ **你所要换绑的[tg](tg://user?id={e.tg}) - {e.tg}\n\n用户状态正常！无须换绑。**',
                                          buttons=back_members_ikb)
-
-            if sql_delete_emby(tg=call.from_user.id) is True:
-                sql_update_emby(Emby.embyid == e.embyid, tg=call.from_user.id)
+            if sql_update_emby(Emby.tg == call.from_user.id, embyid=e.embyid, name=e.name, pwd=e.pwd, pwd2=e.pwd2,
+                               lv=e.lv, cr=e.cr, ex=e.ex, iv=e.iv):
                 await sendMessage(call,
                                   f'⭕#TG改绑 原emby账户 #{emby_name} \n\n已绑定至 [{call.from_user.first_name}](tg://user?id={call.from_user.id}) - {call.from_user.id}',
                                   send=True)
@@ -272,8 +274,13 @@ async def change_tg(_, call):
                     f'【TG改绑】 emby账户 {emby_name} 绑定至 {call.from_user.first_name}-{call.from_user.id}')
                 await editMessage(call, text)
             else:
-                await editMessage(call, "🍰 **【TG改绑】数据库处理出错，请联系闺蜜（管理）！**", back_members_ikb)
+                await editMessage(call, '🍰 **【TG改绑】数据库处理出错，请联系闺蜜（管理）！**', back_members_ikb)
                 LOGGER.error(f"【TG改绑】 emby账户{emby_name} 绑定未知错误。")
+            if sql_delete_emby(tg=e.tg):
+                LOGGER.info(f'【TG改绑】删除原账户 id{e.tg}, Emby:{e.name} 成功...')
+            else:
+                await editMessage(call, "🍰 **⭕#TG改绑 原账户删除错误，请联系闺蜜（管理）！**", back_members_ikb)
+                LOGGER.error(f"【TG改绑】删除原账户 id{e.tg}, Emby:{e.name} 失败...")
 
 
 @bot.on_callback_query(filters.regex('bindtg') & user_in_group_on_filter)
@@ -556,7 +563,8 @@ async def do_store(_, call):
         # return await callAnswer(call, '🌏 Sorry，此功能仅服务于公益服，其他请点击 【使用注册码】 续期', True) # 公费直接转兑换码
         return await call_exchange(_, call)
     await asyncio.gather(callAnswer(call, '✔️ 欢迎进入兑换商店'),
-                         editMessage(call, f'**🏪 请选择想要使用的服务：**\n\n🤖 自动{sakura_b}续期：{_open.exchange} {_open.exchange_cost * 30}/月',
+                         editMessage(call,
+                                     f'**🏪 请选择想要使用的服务：**\n\n🤖 自动{sakura_b}续期：{_open.exchange} {_open.exchange_cost * 30}/月',
                                      buttons=store_ikb()))
 
 

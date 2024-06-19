@@ -144,6 +144,8 @@ class Config(BaseModel):
     moviepilot_access_token: str = ""
     download_cost: int = 20
     download_log_chatid: int = 0
+    # 是否狙杀皮套人
+    fuxx_pitao: bool = True
 
     def __init__(self, **data):
         super().__init__(**data)
