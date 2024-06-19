@@ -24,7 +24,7 @@ def aiohttp_retry(retry_count):
 async def do_request(request):
     async with aiohttp.ClientSession() as session:
         async with session.request(method=request['method'], url=request['url'], headers=request['headers'], data=request.get('data')) as response:
-            if response.status == 401:
+            if response.status == 401 or response.status == 403:
                 LOGGER.error("MP Token expired, attempting to re-login.")
                 success = await login()
                 if success:
@@ -51,7 +51,7 @@ async def search(title):
     if title is None:
         return False, []
     url = f"{moviepilot_url}/api/v1/search/title?keyword={title}"
-    headers = {'Authorization': moviepilot_access_token}
+    headers = {'Authorization': config.moviepilot_access_token}
     request = {'method': 'GET', 'url': url, 'headers': headers}
     try:
         data = await do_request(request)
@@ -93,7 +93,7 @@ async def add_download_task(param):
         return False, None
     url = f"{moviepilot_url}/api/v1/download/add"
     headers = {'Content-Type': 'application/json',
-               'Authorization': moviepilot_access_token}
+               'Authorization': config.moviepilot_access_token}
     jsonData = json.dumps(param)
     request = {'method': 'POST', 'url': url,
                'headers': headers, 'data': jsonData}
