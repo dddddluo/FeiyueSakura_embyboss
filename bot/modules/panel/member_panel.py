@@ -28,6 +28,7 @@ from bot.modules.commands.exchange import rgs_code
 from bot.sql_helper.sql_code import sql_count_c_code
 from bot.sql_helper.sql_emby import sql_get_emby, sql_update_emby, Emby, sql_delete_emby
 from bot.sql_helper.sql_emby2 import sql_get_emby2, sql_delete_emby2
+from bot.sql_helper.sql_request_record import sql_add_request_record
 from bot.func_helper.moviepilot import search, add_download_task
 
 
@@ -790,21 +791,22 @@ async def handle_resource_selection(call, result):
             return
         else:
             try:
+                await editMessage(msg, '🔍 正在处理，请稍后')
                 index = int(txt.text)
                 size = result[index-1]['size'] / (1024 * 1024 * 1024)
                 need_cost = math.ceil(size) * config.download_cost
                 if need_cost > emby_user.iv:
                     await editMessage(msg, f"❌ 您的{sakura_b}不足，此资源需要 {need_cost}{sakura_b}\n请选择其他资源编号", buttons=re_download_media)
                     continue
-                success, download_id = await add_download_task(
-                    result[index-1]['torrent_info'])
+                success, download_id = await add_download_task(result[index-1]['torrent_info'])
                 if success:
-                    log = f"【下载任务】：{call.from_user.id} 已成功添加到下载队列，下载ID：{download_id}\n此次消耗 {need_cost}{sakura_b}"
+                    log = f"【下载任务】：[{call.from_user.first_name}](tg://user?id={call.from_user.id}) 已成功添加到下载队列，下载ID：{download_id}\n此次消耗 {need_cost}{sakura_b}"
+                    download_log = f"{log}\n详情：{result[index-1]['tg_log']}"
                     LOGGER.info(log)
                     sql_update_emby(Emby.tg == call.from_user.id,
                                     iv=emby_user.iv - need_cost)
+                    sql_add_request_record(call.from_user.id, download_id, result[index-1]['title'], download_log, need_cost)
                     if config.download_log_chatid:
-                        download_log = f"{log}\n详情：{result[index-1]['tg_log']}"
                         await sendMessage(call, download_log, send=True, chat_id=config.download_log_chatid)
                     await editMessage(msg, f"🎉 已成功添加到下载队列，下载ID：{download_id}，此次消耗 {need_cost}{sakura_b}", buttons=re_download_media)
                     return
