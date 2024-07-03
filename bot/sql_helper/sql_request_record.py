@@ -34,11 +34,22 @@ def sql_add_request_record(tg: int, download_id: str, request_name: str, detail:
             return False
 
 
-def sql_get_request_record(tg: int):
+def sql_get_request_record(tg: int, page: int = 1, limit: int = 5):
     with Session() as session:
         request_record = session.query(RequestRecord).filter(
-            RequestRecord.tg == tg).all()
-        return request_record
+            RequestRecord.tg == tg).limit(limit + 1).offset((page - 1) * limit).all()
+        if len(request_record) == 0:
+            return None, False
+        if len(request_record) == limit + 1:
+            has_next = True
+            request_record = request_record[:-1]
+        else:
+            has_next = False
+        if page > 1:
+            has_prev = True
+        else:
+            has_prev = False
+        return request_record, has_prev, has_next
 
 
 def sql_get_all_request_record():

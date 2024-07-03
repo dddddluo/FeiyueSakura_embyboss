@@ -21,15 +21,15 @@ from bot.func_helper.filters import user_in_group_on_filter
 from bot.func_helper.utils import members_info, tem_alluser, cr_link_one
 from bot.func_helper.fix_bottons import members_ikb, back_members_ikb, re_create_ikb, del_me_ikb, re_delme_ikb, \
     re_reset_ikb, re_changetg_ikb, emby_block_ikb, user_emby_block_ikb, user_emby_unblock_ikb, re_exchange_b_ikb, \
-    store_ikb, re_store_renew, re_bindtg_ikb, close_it_ikb, user_query_page, re_download_media
+    store_ikb, re_store_renew, re_bindtg_ikb, close_it_ikb, user_query_page, re_download_center_ikb, page_request_record_ikb
 from bot.func_helper.msg_utils import callAnswer, editMessage, callListen, sendMessage, ask_return, deleteMessage, sendPhoto
 from bot.modules.commands import p_start
 from bot.modules.commands.exchange import rgs_code
 from bot.sql_helper.sql_code import sql_count_c_code
 from bot.sql_helper.sql_emby import sql_get_emby, sql_update_emby, Emby, sql_delete_emby
 from bot.sql_helper.sql_emby2 import sql_get_emby2, sql_delete_emby2
-from bot.sql_helper.sql_request_record import sql_add_request_record
-from bot.func_helper.moviepilot import search, add_download_task
+from bot.sql_helper.sql_request_record import sql_add_request_record, sql_get_request_record
+from bot.func_helper.moviepilot import search, add_download_task, get_download_task
 
 
 
@@ -569,46 +569,6 @@ async def do_store(_, call):
                                      buttons=store_ikb()))
 
 
-# @bot.on_callback_query(filters.regex('store-renew') & user_in_group_on_filter)
-# async def do_store_renew(_, call):
-#     if _open.exchange:
-#         await callAnswer(call, '✔️ 进入兑换时长')
-#         e = sql_get_emby(tg=call.from_user.id)
-#         if e is None:
-#             return
-#         if e.iv < _open.exchange_cost:
-#             return await editMessage(call,
-#                                      f'**🏪 兑换规则：**\n当前兑换为 {_open.exchange_cost}{sakura_b} / 一天，**兑换者所持有积分不得低于{_open.exchange_cost}**，当前仅：{e.iv}，请好好努力。',
-#                                      buttons=back_members_ikb)
-#
-#         await editMessage(call,
-#                           f'🏪 您已满足基础{sakura_b}要求，请回复您需要兑换的时长，当前兑换为 {_open.exchange_cost}{sakura_b} / 一天，退出请 /cancel')
-#         m = await callListen(call, 120, buttons=re_store_renew)
-#         if m is False:
-#             return
-#
-#         elif m.text == '/cancel':
-#             await asyncio.gather(m.delete(), do_store(_, call))
-#         else:
-#             try:
-#                 await m.delete()
-#                 iv = int(m.text)
-#             except KeyError:
-#                 await editMessage(call, f'❌ 请不要调戏bot，输入一个整数！！！', buttons=re_store_renew)
-#             else:
-#                 new_us = e.iv - iv
-#                 if new_us < 0:
-#                     sql_update_emby(Emby.tg == call.from_user.id, iv=e.iv - 10)
-#                     return await editMessage(call, f'🫡，西内！输入值超出你持有的{e.iv}{sakura_b}，倒扣10。')
-#                 new_ex = e.ex + timedelta(days=iv / _open.exchange_cost)
-#                 sql_update_emby(Emby.tg == call.from_user.id, ex=new_ex, iv=new_us)
-#                 await asyncio.gather(emby.emby_change_policy(id=e.embyid),
-#                                      editMessage(call, f'🎉 您已花费 {iv}{sakura_b}\n🌏 到期时间 **{new_ex}**'))
-#                 LOGGER.info(f'【兑换续期】- {call.from_user.id} 已花费 {iv}{sakura_b}，到期时间：{new_ex}')
-#     else:
-#         await callAnswer(call, '❌ 管理员未开启此兑换', True)
-
-
 @bot.on_callback_query(filters.regex('store-whitelist') & user_in_group_on_filter)
 async def do_store_whitelist(_, call):
     if _open.whitelist:
@@ -696,7 +656,12 @@ async def do_store_query(_, call):
         number = 1
     await callAnswer(call, '📜 正在翻页')
     await editMessage(call, text=a[number - 1], buttons=await user_query_page(b, number))
-
+@bot.on_callback_query(filters.regex('download_center') & user_in_group_on_filter)
+async def call_download_center(_, call):
+    if not config.moviepilot_open:
+        return await callAnswer(call, '❌ 管理员未开启求片功能', True)
+    await callAnswer(call, '🔍 求片中心')
+    await editMessage(call, '🔍 欢迎进入求片中心', buttons=re_download_center_ikb)
 
 @bot.on_callback_query(filters.regex('download_media') & user_in_group_on_filter)
 async def download_media(_, call):
@@ -710,17 +675,17 @@ async def download_media(_, call):
     await asyncio.gather(callAnswer(call, f'🔍 请输入你想求的资源名称'))
     await editMessage(call,
                       f"当前求片费用为: 1GB 消耗 {config.download_cost} {sakura_b}\n您当前拥有 {emby_user.iv} {sakura_b}\n请在120s内对我发送你想求的资源名称，\n退出点 /cancel")
-    txt = await callListen(call, 120, buttons=re_download_media)
+    txt = await callListen(call, 120, buttons=re_download_center_ikb)
     if txt is False:
         return
     if txt.text == '/cancel':
         await asyncio.gather(txt.delete(), editMessage(call, '🔍 已取消操作', buttons=back_members_ikb))
     else:
-        await editMessage(call, '🔍 正在搜索，请稍后...', buttons=re_download_media)
+        await editMessage(call, '🔍 正在搜索，请稍后...', buttons=re_download_center_ikb)
         success, result = await search(txt.text)
         if success:
             if len(result) <= 0:
-                await editMessage(call, '🤷‍♂️ 没有找到相关信息', buttons=re_download_media)
+                await editMessage(call, '🤷‍♂️ 没有找到相关信息', buttons=re_download_center_ikb)
                 return
             for index, item in enumerate(result, start=1):
                 year = item["year"]
@@ -774,7 +739,7 @@ async def download_media(_, call):
             await sendMessage(call, f"共推送{len(result)}个结果！", send=True, chat_id=call.from_user.id)
             await handle_resource_selection(call, result)
         else:
-            await editMessage(call, '🤷‍♂️ 搜索失败，请稍后再试', buttons=re_download_media)
+            await editMessage(call, '🤷‍♂️ 搜索失败，请稍后再试', buttons=re_download_center_ikb)
             return
 
 
@@ -782,7 +747,7 @@ async def handle_resource_selection(call, result):
     while True:
         emby_user = sql_get_emby(tg=call.from_user.id)
         msg = await sendPhoto(call, photo=bot_photo, caption = "【选择资源编号】：\n请在120s内对我发送你的资源编号，\n退出点 /cancel", send=True, chat_id=call.from_user.id)
-        txt = await callListen(call, 120, buttons=re_download_media)
+        txt = await callListen(call, 120, buttons=re_download_center_ikb)
         if txt is False:
             await asyncio.gather(editMessage(msg, '🔍 已取消操作', buttons=back_members_ikb))
             return
@@ -796,7 +761,7 @@ async def handle_resource_selection(call, result):
                 size = result[index-1]['size'] / (1024 * 1024 * 1024)
                 need_cost = math.ceil(size) * config.download_cost
                 if need_cost > emby_user.iv:
-                    await editMessage(msg, f"❌ 您的{sakura_b}不足，此资源需要 {need_cost}{sakura_b}\n请选择其他资源编号", buttons=re_download_media)
+                    await editMessage(msg, f"❌ 您的{sakura_b}不足，此资源需要 {need_cost}{sakura_b}\n请选择其他资源编号", buttons=re_download_center_ikb)
                     continue
                 success, download_id = await add_download_task(result[index-1]['torrent_info'])
                 if success:
@@ -808,18 +773,77 @@ async def handle_resource_selection(call, result):
                     sql_add_request_record(call.from_user.id, download_id, result[index-1]['title'], download_log, need_cost)
                     if config.download_log_chatid:
                         await sendMessage(call, download_log, send=True, chat_id=config.download_log_chatid)
-                    await editMessage(msg, f"🎉 已成功添加到下载队列，下载ID：{download_id}，此次消耗 {need_cost}{sakura_b}", buttons=re_download_media)
+                    await editMessage(msg, f"🎉 已成功添加到下载队列，下载ID：{download_id}，此次消耗 {need_cost}{sakura_b}", buttons=re_download_center_ikb)
                     return
                 else:
                     LOGGER.error(f"【下载任务】：{call.from_user.id} 添加下载任务失败!")
-                    await editMessage(msg, f"❌ 添加下载任务失败!", buttons=re_download_media)
+                    await editMessage(msg, f"❌ 添加下载任务失败!", buttons=re_download_center_ikb)
                     return
             except IndexError:
-                await editMessage(msg, '❌ 输入错误，请重新输入，退出点 /cancel', buttons=re_download_media)
+                await editMessage(msg, '❌ 输入错误，请重新输入，退出点 /cancel', buttons=re_download_center_ikb)
                 continue
             except ValueError:
-                await editMessage(msg, '❌ 输入错误，请重新输入，退出点 /cancel', buttons=re_download_media)
+                await editMessage(msg, '❌ 输入错误，请重新输入，退出点 /cancel', buttons=re_download_center_ikb)
                 continue
             except:
-                await editMessage(msg, '❌ 呜呜呜，出错了', buttons=re_download_media)
+                await editMessage(msg, '❌ 呜呜呜，出错了', buttons=re_download_center_ikb)
                 return
+
+
+user_data = {}
+
+@bot.on_callback_query(filters.regex('rate') & user_in_group_on_filter)
+async def call_rate(_, call):
+    if not config.moviepilot_open:
+        return await callAnswer(call, '❌ 管理员未开启求片功能', True)
+    await callAnswer(call, '📈 查看求片下载任务')
+    request_record, has_prev, has_next = sql_get_request_record(call.from_user.id)
+    if request_record is None:
+        return await editMessage(call, '🤷‍♂️ 您还没有求过片，快去求片吧', buttons=re_download_center_ikb)
+    download_tasks = await get_download_task()
+    text = get_download_text(download_tasks, request_record)
+    user_data[call.from_user.id] = {'page_request_record': 1}
+    await editMessage(call, text, buttons=page_request_record_ikb(has_prev, has_next))
+@bot.on_callback_query(filters.regex('pre_page_request_record') & user_in_group_on_filter)
+async def pre_page_request_record(_, call):
+    if user_data.get(call.from_user.id) is None:
+        user_data[call.from_user.id] = {'page_request_record': 1}
+    page = user_data[call.from_user.id]['page_request_record'] - 1
+    if page <= 0:
+        page = 1
+    request_record, has_prev, has_next = sql_get_request_record(call.from_user.id, page=page)
+    user_data[call.from_user.id]['page_request_record'] = page
+    download_tasks = await get_download_task()
+    text = get_download_text(download_tasks, request_record)
+    await editMessage(call, text, buttons=page_request_record_ikb(has_prev, has_next))
+@bot.on_callback_query(filters.regex('next_page_request_record') & user_in_group_on_filter)
+async def next_page_request_record(_, call):
+    if user_data.get(call.from_user.id) is None:
+        user_data[call.from_user.id] = {'page_request_record': 1}
+    page = user_data[call.from_user.id]['page_request_record'] + 1
+    request_record, has_prev, has_next = sql_get_request_record(call.from_user.id, page=page)
+    user_data[call.from_user.id]['page_request_record'] = page
+    download_tasks = await get_download_task()
+    text = get_download_text(download_tasks, request_record)
+    await editMessage(call, text, buttons=page_request_record_ikb(has_prev, has_next))
+def get_download_text(download_tasks, request_record):
+    text = '📈 求片任务\n'
+    for index, item in enumerate(request_record, start=1):
+        for download_task in download_tasks:
+            if download_task['download_id'] == item.download_id:
+                progress = download_task['progress']
+                progress_text = ''
+                if progress is None:
+                    progress_text = '未知'
+                else:
+                    progress = round(progress, 1)
+                    left_progress = '🟩' * int(progress/10)
+                    right_progress = '⬜️' * (10 - int(progress // 10))
+                    progress_text = f"{left_progress}{right_progress} {progress}%"
+                text += f"「{index}」：{item.request_name} \n状态：{'正在下载' if download_task['state'] == 'downloading' else ''} {progress_text}\n"
+                break
+        else:
+            left_progress = '🟩' * 10
+            progress_text = f"{left_progress} 100%"
+            text += f"「{index}」：{item.request_name} \n状态：已完成 {progress_text}\n"
+    return text

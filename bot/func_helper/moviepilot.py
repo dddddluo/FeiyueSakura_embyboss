@@ -108,3 +108,17 @@ async def add_download_task(param):
     except Exception as e:
         LOGGER.error(f"MP add download task failed: {e}")
         return False, None
+
+async def get_download_task():
+    url = f"{moviepilot_url}/api/v1/download"
+    headers = {'Authorization': config.moviepilot_access_token}
+    request = {'method': 'GET', 'url': url, 'headers': headers}
+    try:
+        result = await do_request(request)
+        data = []
+        for item in result:
+            data.append({'download_id': item['hash'], 'state': item['state'], 'progress': item['progress']})
+        return data
+    except Exception as e:
+        LOGGER.error(f"MP get download task failed: {e}")
+        return None

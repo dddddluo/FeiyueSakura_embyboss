@@ -51,7 +51,7 @@ def members_ikb(emby=False) -> InlineKeyboardMarkup:
         method = 'storeall' if not user_buy.stat else 'exchange'
         return ikb([[('🏪 兑换商店', method), ('🗑️ 删除账号', 'delme')],
                     [('🎬 显示/隐藏', 'embyblock'), ('⭕ 重置密码', 'reset')],
-                    [('🔍 求片', 'download_media'), ('♻️ 主界面', 'back_start')]])
+                    [('🔍 求片中心', 'download_center'), ('♻️ 主界面', 'back_start')]])
     else:
         return ikb(
             [[('👑 创建账户', 'create')], [('⭕ 换绑TG', 'changetg'), ('🔍 绑定TG', 'bindtg')],
@@ -66,8 +66,14 @@ re_bindtg_ikb = ikb([[('✨ 绑定TG', 'bindtg'), ('💫 用户主页', 'members
 re_delme_ikb = ikb([[('♻️ 重试', 'delme')], [('🔙 返回', 'members')]])
 re_reset_ikb = ikb([[('♻️ 重试', 'reset')], [('🔙 返回', 'members')]])
 re_exchange_b_ikb = ikb([[('♻️ 重试', 'exchange'), ('❌ 关闭', 'closeit')]])
-re_download_media = ikb([[('🔍 求片', 'download_media'), ('💫 用户主页', 'members')]])
-
+re_download_center_ikb = ikb([[('🔍 求片', 'download_media'), ('📈 查看下载进度', 'rate')], [('🔙 返回', 'members')]])
+def page_request_record_ikb(has_prev: bool, has_next: bool):
+    buttons = []
+    if has_prev:
+        buttons.append(('◀️ 上一页', 'pre_page_request_record'))
+    if has_next:
+        buttons.append(('▶️ 下一页', 'next_page_request_record'))
+    return ikb([buttons, [('🔙 返回', 'download_center')]])
 def store_ikb():
     return ikb([[(f'♾️ 兑换白名单', 'store-whitelist')],
                 [(f'🎟️ 兑换注册码', 'store-invite'), (f'🔍 查询注册码', 'store-query')], [(f'❌ 取消', 'members')]])
