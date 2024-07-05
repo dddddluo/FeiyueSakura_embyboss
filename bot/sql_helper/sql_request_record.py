@@ -39,7 +39,7 @@ def sql_get_request_record(tg: int, page: int = 1, limit: int = 5):
         request_record = session.query(RequestRecord).filter(
             RequestRecord.tg == tg).limit(limit + 1).offset((page - 1) * limit).all()
         if len(request_record) == 0:
-            return None, False
+            return None, False, False
         if len(request_record) == limit + 1:
             has_next = True
             request_record = request_record[:-1]
