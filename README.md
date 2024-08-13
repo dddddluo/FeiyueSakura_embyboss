@@ -11,9 +11,9 @@
 </p>
 <br>
 
-## 飞跃定制
+## 飞跃定制，在[原项目](https://github.com/berry8838/Sakura_embyboss)的基础上加入了求片功能
 - **求片功能：** 接入MoviePilot API，实现求片功能，用户可进入用户功能->求片中心进行求片操作，求片成功后，将自动将片源添加到用户的媒体库中
-- **求片功能配置说明：** 
+- **求片功能配置说明：**
   - 在config.json中添加MoviePilot相关配置
 
     - MP用户名
@@ -36,6 +36,9 @@
       ```json
       "download_cost": 20
       ```
+- **如何部署：**
+
+  将镜像名称修改为`dddddluo/feiyue_sakura_embyboss:latest`，其余配置请参考原项目说明
 
 ## 📜 项目说明
 
