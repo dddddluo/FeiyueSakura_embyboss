@@ -1,5 +1,7 @@
 #! /usr/bin/python3
 # -*- coding: utf-8 -*-
+import contextlib
+
 from .func_helper.logger_config import logu, Now
 
 LOGGER = logu(__name__)
@@ -24,10 +26,8 @@ group = config.group
 main_group = config.main_group
 chanel = config.chanel
 bot_photo = config.bot_photo
-user_buy = config.user_buy
 _open = config.open
 admins = config.admins
-invite = config.invite
 sakura_b = config.money
 ranks = config.ranks
 prefixes = ['/', '!', '.', '，', '。']
@@ -38,7 +38,6 @@ emby_url = config.emby_url
 emby_line = config.emby_line
 emby_block = config.emby_block
 extra_emby_libs = config.extra_emby_libs
-another_line = config.another_line
 # # 数据库
 db_host = config.db_host
 db_user = config.db_user
@@ -74,10 +73,9 @@ user_p = [
     BotCommand("start", "[私聊] 开启用户面板"),
     BotCommand("myinfo", "[用户] 查看状态"),
     BotCommand("count", "[用户] 媒体库数量"),
-]
-if not user_buy.stat:
-    user_p += [BotCommand("red", "[用户/禁言] 发红包"),
-               BotCommand("srank", "[用户/禁言] 查看计分")]
+    BotCommand("red", "[用户/禁言] 发红包"),
+    BotCommand("srank", "[用户/禁言] 查看计分")]
+
 # 取消 BotCommand("exchange", "[私聊] 使用注册码")
 admin_p = user_p + [
     BotCommand("kk", "管理用户 [管理]"),
@@ -122,6 +120,9 @@ if len(extra_emby_libs) > 0:
     owner_p += [BotCommand("extraembylibs_blockall", "一键关闭所有用户的额外媒体库 [owner]"),
                 BotCommand("extraembylibs_unblockall", "一键开启所有用户的额外媒体库 [owner]")]
 
+with contextlib.suppress(ImportError):
+    import uvloop
+    uvloop.install()
 from pyrogram import enums
 from pyromod import Client
 
