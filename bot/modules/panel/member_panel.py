@@ -11,7 +11,7 @@ import math
 import random
 from datetime import timedelta, datetime
 from bot.schemas import ExDate, Yulv
-from bot import bot, LOGGER, _open, emby_line, sakura_b, ranks, group, extra_emby_libs, config, bot_name, schedall
+from bot import bot, LOGGER, _open, emby_line, sakura_b, ranks, group, extra_emby_libs, config, bot_name, schedall, bot_photo
 from pyrogram import filters
 from bot.func_helper.emby import emby
 from bot.func_helper.filters import user_in_group_on_filter
@@ -19,7 +19,7 @@ from bot.func_helper.utils import members_info, tem_alluser, cr_link_one
 from bot.func_helper.fix_bottons import members_ikb, back_members_ikb, re_create_ikb, del_me_ikb, re_delme_ikb, \
     re_reset_ikb, re_changetg_ikb, emby_block_ikb, user_emby_block_ikb, user_emby_unblock_ikb, re_exchange_b_ikb, \
     store_ikb, re_bindtg_ikb, close_it_ikb, user_query_page, re_download_center_ikb, page_request_record_ikb, re_born_ikb
-from bot.func_helper.msg_utils import callAnswer, editMessage, callListen, sendMessage, ask_return, deleteMessage
+from bot.func_helper.msg_utils import callAnswer, editMessage, callListen, sendMessage, ask_return, deleteMessage, sendPhoto
 from bot.modules.commands import p_start
 from bot.modules.commands.exchange import rgs_code
 from bot.sql_helper.sql_code import sql_count_c_code
