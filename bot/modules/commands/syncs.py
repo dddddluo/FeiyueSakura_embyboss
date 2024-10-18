@@ -21,6 +21,7 @@ from bot.func_helper.filters import admins_on_filter
 from bot.sql_helper.sql_emby import get_all_emby, Emby, sql_get_emby, sql_update_embys, sql_delete_emby
 from bot.func_helper.msg_utils import deleteMessage, sendMessage, sendPhoto
 from bot.sql_helper.sql_emby2 import sql_get_emby2
+from bot.sql_helper.sql_emby import sql_update_emby
 
 
 @bot.on_message(filters.command('syncgroupm', prefixes) & admins_on_filter)
@@ -71,7 +72,8 @@ async def sync_emby_group(_, msg):
                           text=f"**⚡群组成员同步任务 结束！**\n  共检索出 {b} 个账户，处刑 {a} 个账户，耗时：{times:.3f}s")
     else:
         await sendMessage(msg, text="** 群组成员同步任务 结束！没人偷跑~**")
-    LOGGER.info(f"【群组同步任务结束】 - {msg.from_user.id} 共检索出 {b} 个账户，处刑 {a} 个账户，耗时：{times:.3f}s")
+    LOGGER.info(
+        f"【群组同步任务结束】 - {msg.from_user.id} 共检索出 {b} 个账户，处刑 {a} 个账户，耗时：{times:.3f}s")
 
 
 @bot.on_message(filters.command('syncunbound', prefixes) & admins_on_filter)
@@ -116,7 +118,8 @@ async def sync_emby_unbound(_, msg):
         await sendMessage(msg, text=f"⚡绑定同步任务 done\n  共检索出 {b} 个账户，删除 {a}个，耗时：{times:.3f}s")
     else:
         await sendMessage(msg, text=f"**绑定同步任务 结束！搞毛，没有人被干掉。**")
-    LOGGER.info(f"【绑定同步任务结束】 - {msg.from_user.id} 共检索出 {b} 个账户，删除 {a}个，耗时：{times:.3f}s")
+    LOGGER.info(
+        f"【绑定同步任务结束】 - {msg.from_user.id} 共检索出 {b} 个账户，删除 {a}个，耗时：{times:.3f}s")
 
 
 @bot.on_message(filters.command('bindall_id', prefixes) & filters.user(owner))
@@ -167,10 +170,12 @@ async def reload_admins(_, msg):
     e = sql_get_emby(tg=msg.from_user.id)
     if e.embyid is not None:
         await emby.emby_change_policy(id=e.embyid, admin=True)
-        LOGGER.info(f"{msg.from_user.first_name} - {msg.from_user.id} 开启了 emby 后台")
+        LOGGER.info(
+            f"{msg.from_user.first_name} - {msg.from_user.id} 开启了 emby 后台")
         await sendMessage(msg, "👮🏻 授权完成。已开启emby后台", timer=60)
     else:
-        LOGGER.info(f"{msg.from_user.first_name} - {msg.from_user.id} 开启 emby 后台失败")
+        LOGGER.info(
+            f"{msg.from_user.first_name} - {msg.from_user.id} 开启 emby 后台失败")
         await sendMessage(msg, "👮🏻 授权失败。未查询到绑定账户", timer=60)
 
 
@@ -183,11 +188,13 @@ async def clear_deleted_account(_, msg):
     async for d in bot.get_members(group[0]):  # 以后别写group了,绑定一下聊天群更优雅
         b += 1
         try:
-            if d.user.is_deleted:  # and d.is_member or any(keyword in l.user.first_name for keyword in keywords) 关键词检索，没模板不加了
+            # and d.is_member or any(keyword in l.user.first_name for keyword in keywords) 关键词检索，没模板不加了
+            if d.user.is_deleted:
                 await msg.chat.ban_member(d.user.id)
                 sql_delete_emby(tg=d.user.id)
                 a += 1
-                text += f'{a}. `{d.user.id}` 已注销\n'  # 打个注释，scheduler 默认出群就删号了，不需要再执行删除
+                # 打个注释，scheduler 默认出群就删号了，不需要再执行删除
+                text += f'{a}. `{d.user.id}` 已注销\n'
         except Exception as e:
             LOGGER.error(e)
     await send.delete()
@@ -206,7 +213,8 @@ async def kick_not_emby(_, msg):
         return await sendMessage(msg,
                                  '注意: 此操作会将 当前群组中无emby账户的选手kick, 如确定使用请输入 `/kick_not_emby true`')
     if open_kick == 'true':
-        LOGGER.info(f"{msg.from_user.first_name} - {msg.from_user.id} 执行了踢出非emby用户的操作")
+        LOGGER.info(
+            f"{msg.from_user.first_name} - {msg.from_user.id} 执行了踢出非emby用户的操作")
         embyusers = get_all_emby(Emby.embyid is not None and Emby.embyid != '')
         # get tgid
         embytgs = []
@@ -222,4 +230,40 @@ async def kick_not_emby(_, msg):
                     LOGGER.info(f"{cmember} 已踢出")
                 except Exception as e:
                     LOGGER.info(f"踢出 {cmember} 失败，原因: {e}")
+                    pass
+
+
+@bot.on_message(filters.command('restore_from_db', prefixes) & admins_on_filter)
+async def restore_from_db(_, msg):
+    await deleteMessage(msg)
+    try:
+        open_kick = msg.command[1]
+    except:
+        return await sendMessage(msg,
+                                 '注意: 此操作会将 从数据库中恢复用户到Emby中, 如确定使用请输入 `/restore_from_db true`')
+    if open_kick == 'true':
+        LOGGER.info(
+            f"{msg.from_user.first_name} - {msg.from_user.id} 执行了从数据库中恢复用户到Emby中的操作")
+        embyusers = get_all_emby(Emby.embyid is not None and Emby.embyid != '')
+        # 获取当前执行命令的群组成员
+        chat_members = [member.user.id async for member in bot.get_chat_members(chat_id=msg.chat.id)]
+        for embyuser in embyusers:
+            if embyuser.tg in chat_members:
+                try:
+                    # emby api操作
+                    data = await emby.emby_create(embyuser.name, embyuser.us)
+                    if not data:
+                        await msg.reply(
+                            f'**- ❎ 已有此账户名\n- ❎ 或检查有无特殊字符\n- ❎ 或emby服务器连接不通，跳过恢复此{embyuser.name}用户！**',
+                        )
+                        LOGGER.error(
+                            f"【恢复账户】：重复账户 or 未知错误！{embyuser.name} 恢复失败！")
+                    else:
+                        tg = embyuser.tg
+                        embyid = data[0]
+                        pwd = data[1]
+                        sql_update_emby(Emby.tg == tg, embyid=embyid, pwd=pwd)
+                        LOGGER.info(f"{embyuser.tg} 已恢复")
+                except Exception as e:
+                    LOGGER.info(f"恢复 {embyuser.tg} 失败，原因: {e}")
                     pass
