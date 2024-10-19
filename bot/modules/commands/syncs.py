@@ -240,7 +240,7 @@ async def restore_from_db(_, msg):
         open_kick = msg.command[1]
     except:
         return await sendMessage(msg,
-                                 '注意: 此操作会将 从数据库中恢复用户到Emby中, 如确定使用请输入 `/restore_from_db true`')
+                                 '注意: 此操作会将 从数据库中恢复用户到Emby中, 请在需要恢复的群组中执行此命令, 如确定使用请输入 `/restore_from_db true`')
     if open_kick == 'true':
         LOGGER.info(
             f"{msg.from_user.first_name} - {msg.from_user.id} 执行了从数据库中恢复用户到Emby中的操作")
