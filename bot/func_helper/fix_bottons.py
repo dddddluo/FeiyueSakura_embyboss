@@ -120,6 +120,7 @@ async def cr_page_server():
 
 gm_ikb_content = ikb([[('⭕ 注册状态', 'open-menu'), ('🎟️ 注册/续期码', 'cr_link')],
                       [('💊 查询注册', 'ch_link'), ('🏬 兑换设置', 'set_renew')],
+                      [('👥 用户列表', 'normaluser'), ('👑 白名单列表', 'whitelist')],
                       [('🌏 定时', 'schedall'), ('🕹️ 主界面', 'back_start'), ('其他 🪟', 'back_config')]])
 
 
@@ -180,7 +181,7 @@ async def plays_list_button(i, j, days) -> InlineKeyboardMarkup:
     return keyboard
 
 
-async def user_query_page(i, j) -> InlineKeyboardMarkup:
+async def store_query_page(i, j) -> InlineKeyboardMarkup:
     """
     member的注册码查询分页
     :param i: 总
@@ -195,6 +196,32 @@ async def user_query_page(i, j) -> InlineKeyboardMarkup:
     return keyboard
 
 
+async def whitelist_page_ikb(total_page: int, current_page: int) -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboard()
+    keyboard.paginate(total_page, current_page, 'whitelist:{number}')
+    next = InlineButton('⏭️ 后退+5', f'whitelist:{current_page + 5}')
+    previous = InlineButton('⏮️ 前进-5', f'whitelist:{current_page - 5}')
+    followUp = [InlineButton('🔙 Back', 'manage')]
+    if total_page > 5:
+        if current_page - 5 >= 1:
+            followUp.append(previous)
+        if current_page + 5 < total_page:
+            followUp.append(next)
+    keyboard.row(*followUp)
+    return keyboard
+async def normaluser_page_ikb(total_page: int, current_page: int) -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboard()
+    keyboard.paginate(total_page, current_page, 'normaluser:{number}')
+    next = InlineButton('⏭️ 后退+5', f'normaluser:{current_page + 5}')
+    previous = InlineButton('⏮️ 前进-5', f'normaluser:{current_page - 5}')
+    followUp = [InlineButton('🔙 Back', 'manage')]
+    if total_page > 5:
+        if current_page - 5 >= 1:
+            followUp.append(previous)
+        if current_page + 5 < total_page:
+            followUp.append(next)
+    keyboard.row(*followUp)
+    return keyboard
 def cr_renew_ikb():
     checkin = '✔️' if _open.checkin else '❌'
     exchange = '✔️' if _open.exchange else '❌'

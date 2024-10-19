@@ -18,7 +18,7 @@ from bot.func_helper.filters import user_in_group_on_filter
 from bot.func_helper.utils import members_info, tem_alluser, cr_link_one
 from bot.func_helper.fix_bottons import members_ikb, back_members_ikb, re_create_ikb, del_me_ikb, re_delme_ikb, \
     re_reset_ikb, re_changetg_ikb, emby_block_ikb, user_emby_block_ikb, user_emby_unblock_ikb, re_exchange_b_ikb, \
-    store_ikb, re_bindtg_ikb, close_it_ikb, user_query_page, re_download_center_ikb, page_request_record_ikb, re_born_ikb
+    store_ikb, re_bindtg_ikb, close_it_ikb, store_query_page, re_download_center_ikb, page_request_record_ikb, re_born_ikb
 from bot.func_helper.msg_utils import callAnswer, editMessage, callListen, sendMessage, ask_return, deleteMessage, sendPhoto
 from bot.modules.commands import p_start
 from bot.modules.commands.exchange import rgs_code
@@ -672,7 +672,7 @@ async def do_store_query(_, call):
     except (IndexError, KeyError, ValueError):
         number = 1
     await callAnswer(call, '📜 正在翻页')
-    await editMessage(call, text=a[number - 1], buttons=await user_query_page(b, number))
+    await editMessage(call, text=a[number - 1], buttons=await store_query_page(b, number))
 @bot.on_callback_query(filters.regex('download_center') & user_in_group_on_filter)
 async def call_download_center(_, call):
     if not config.moviepilot_open:
